@@ -97,12 +97,12 @@ def poll(msg, chat_id, chat_type, from_id):
 
 	if chat_type == 'group' or chat_type == 'supergroup':
 		try:
-			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == Master) else bot.sendMessage(chat_id, 'Solo il Grande Maestro del concilio puÃ² indire un sondaggio')
+			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == Master) else bot.sendMessage(chat_id, 'Only the Great Master of the Council can hold a poll')
 		except telepot.exception.TelegramError:
-			bot.sendMessage(chat_id, 'Nessun sondaggio impostato')
+			bot.sendMessage(chat_id, 'No poll set')
 	if chat_type == 'private':
 		if (chat_id != Master):
-			bot.sendMessage(chat_id, 'Lascia lavorare i grandi, bimbo')
+			bot.sendMessage(chat_id, 'Let the grown-ups take care of this, kiddo')
 		else:
 			if poll_of_the_day == None:
 				lista = msg['text'].split('&@')
@@ -115,21 +115,21 @@ def poll(msg, chat_id, chat_type, from_id):
 					risultati[e] = 0
 					buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(risultati[e]) + ')', callback_data=e)])
 				markup = InlineKeyboardMarkup(inline_keyboard=buttons)
-				bot.sendMessage(chat_id, 'Sondaggio registrato')
+				bot.sendMessage(chat_id, 'Poll set')
 			else:
-				bot.sendMessage(chat_id, 'C\'Ã¨ giÃ  un sondaggio in corso')
+				bot.sendMessage(chat_id, 'There\'s already a poll set')
 
 #Show ongoing poll, if there is one
 def ongoing(chat_id, from_id, chat_type):
 	try:
 		bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup)
 	except telepot.exception.TelegramError:
-		bot.sendMessage(chat_id, 'Nessun sondaggio impostato')
+		bot.sendMessage(chat_id, 'No poll set')
 
 #Close poll and generate the result: only the Master can put an end to polls
 def exitpoll(msg, chat_id, from_id):
 	if (from_id != Master):
-		bot.sendMessage(chat_id, 'Solo il Gran Maestro puÃ² chiudere un sondaggio in corso')
+		bot.sendMessage(chat_id, 'Only the Great Master can put an end to an ongoing poll')
 	else:
 		global poll_of_the_day
 		global risultati
@@ -147,7 +147,7 @@ def exitpoll(msg, chat_id, from_id):
 			votanti = {}
 			message_with_inline_keyboard = None
 		except TypeError:
-			bot.sendMessage(chat_id, 'Nessun sondaggio in corso')
+			bot.sendMessage(chat_id, 'No ongoing poll')
 
 #Handle votes and prevent double voters, but allow to change vote
 def on_callback_query(msg):
@@ -171,7 +171,7 @@ def on_callback_query(msg):
 			bot.editMessageText(msg_idf, poll_of_the_day, reply_markup=markup)
 		else:
 			if votanti[from_id] == data:
-				bot.answerCallbackQuery(query_id, text=msg['from']['username'] + ' ha giÃ  espresso il suo voto')
+				bot.answerCallbackQuery(query_id, text=msg['from']['username'] + ' has already cast his vote')
 			else:
 				risultati[data] += 1
 				risultati[votanti[from_id]] -= 1
@@ -185,7 +185,7 @@ def on_callback_query(msg):
 				bot.editMessageText(msg_idf, poll_of_the_day, reply_markup=markup)
 
 	except KeyError:
-			bot.answerCallbackQuery(query_id, text='Sondaggio chiuso')
+			bot.answerCallbackQuery(query_id, text='Poll closed')
 def on_chat_message(msg):
 	first_name = msg['from']['first_name']
 	from_id = msg['from']['id']
@@ -194,7 +194,7 @@ def on_chat_message(msg):
 	logging.info(info)
 	logging.debug(msg)
 	chatter(msg, first_name, from_id)
-	text = msg['text'].replace('@Lonnybot', '')
+	text = msg['text']
 	if text[:5] == '/poll':
 		poll(msg, chat_id, chat_type, from_id)
 	elif text == '/exitpoll':
