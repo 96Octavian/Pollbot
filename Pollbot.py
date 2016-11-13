@@ -11,7 +11,7 @@ import argparse
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
 """
-Python 3.5 skeleton for school polls bot
+My personal attempt at a Python 3.5 polls bot, capable of holding multiple polls (one per group) at a time
 """
 
 message_with_inline_keyboard = None
@@ -194,7 +194,7 @@ def on_chat_message(msg):
 	logging.info(info)
 	logging.debug(msg)
 	chatter(msg, first_name, from_id)
-	text = msg['text']
+	text = msg['text'].replace(bot_name, '')
 	if text[:5] == '/poll':
 		poll(msg, chat_id, chat_type, from_id)
 	elif text == '/exitpoll':
@@ -213,6 +213,7 @@ bot = telepot.Bot(TOKEN)
 bot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query})
 
 logging.info('Bot started.')
+bot_name = '@' + bot.getMe()['username']
 bot.sendMessage(Master, 'Up and running')
 
 # Keep the program running.

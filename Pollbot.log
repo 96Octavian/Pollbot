@@ -33,3 +33,7 @@
 2016-11-13 17:51:03,514 INFO     Chat Message: text group -155161332
 2016-11-13 17:51:07,792 INFO     Chat Message: text group -155161332
 2016-11-13 17:51:20,737 INFO     Chat Message: text group -155161332
+2016-11-13 17:56:48,396 ERROR    Traceback (most recent call last):
+2016-11-13 17:56:48,396 ERROR      File "Pollbot.py", line 220, in <module>
+2016-11-13 17:56:48,409 ERROR    time.sleep(10)
+2016-11-13 17:56:48,409 ERROR    KeyboardInterrupt
