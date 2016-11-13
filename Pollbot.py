@@ -97,11 +97,11 @@ def poll(msg, chat_id, chat_type, from_id):
 
 	if chat_type == 'group' or chat_type == 'supergroup':
 		try:
-			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == Master) else bot.sendMessage(chat_id, 'Only the Great Master of the Council can hold a poll')
+			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == int(Master)) else bot.sendMessage(chat_id, 'Only the Great Master of the Council can hold a poll')
 		except telepot.exception.TelegramError:
 			bot.sendMessage(chat_id, 'No poll set')
 	if chat_type == 'private':
-		if (chat_id != Master):
+		if (chat_id != int(Master)):
 			bot.sendMessage(chat_id, 'Let the grown-ups take care of this, kiddo')
 		else:
 			if poll_of_the_day == None:
@@ -128,7 +128,7 @@ def ongoing(chat_id, from_id, chat_type):
 
 #Close poll and generate the result: only the Master can put an end to polls
 def exitpoll(msg, chat_id, from_id):
-	if (from_id != Master):
+	if (from_id != int(Master)):
 		bot.sendMessage(chat_id, 'Only the Great Master can put an end to an ongoing poll')
 	else:
 		global poll_of_the_day
