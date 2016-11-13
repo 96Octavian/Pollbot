@@ -19,15 +19,17 @@ poll_of_the_day = None
 markup = None
 risultati = {}
 votanti = {}
+Master = None
 
 # Deafults
-LOG_FILENAME = './Lonnybot.log'
+LOG_FILENAME = './Pollbot.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO,format='%(asctime)s %(levelname)-8s %(message)s')
 
 # Define and parse command line arguments
 parser = argparse.ArgumentParser(description="My simple Python Telegram bot")
 parser.add_argument("-l", "--log", help="file to write log to (default '" + LOG_FILENAME + "')")
 parser.add_argument("-T", "--TOKEN", help="bot TOKEN identifier")
+parser.add_argument("-m", "--master", help="master chat id")
 
 # If the log file is specified on the command line then override the default
 args = parser.parse_args()
@@ -39,6 +41,12 @@ else:
 	logging.error('No TOKEN specified')
 	print("You must specify the bot's TOKEN")
 	sys.exit(0)
+if args.master:
+    Master = args.master
+else:
+    logging.error('No Master specified')
+    print("You must specify the bot's Master")
+    sys.exit(0)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +88,7 @@ def chatter(msg, first_name, from_id):
 	with open("./contatti.txt", "a") as myfile:
 				myfile.write(person + '\n')
 
-#Handle all messages starting with '/poll'
+#Handle all messages starting with '/poll': only the Master can set and start polls
 def poll(msg, chat_id, chat_type, from_id):
 	global poll_of_the_day
 	global markup
@@ -89,11 +97,11 @@ def poll(msg, chat_id, chat_type, from_id):
 
 	if chat_type == 'group' or chat_type == 'supergroup':
 		try:
-			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == 66441008) or (from_id == 163329729) else bot.sendMessage(chat_id, 'Solo il Grande Maestro del concilio puÃ² indire un sondaggio')
+			message_with_inline_keyboard = bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup) if (from_id == Master) else bot.sendMessage(chat_id, 'Solo il Grande Maestro del concilio puÃ² indire un sondaggio')
 		except telepot.exception.TelegramError:
 			bot.sendMessage(chat_id, 'Nessun sondaggio impostato')
 	if chat_type == 'private':
-		if (chat_id != 66441008) and (chat_id != 163329729):
+		if (chat_id != Master):
 			bot.sendMessage(chat_id, 'Lascia lavorare i grandi, bimbo')
 		else:
 			if poll_of_the_day == None:
@@ -111,19 +119,17 @@ def poll(msg, chat_id, chat_type, from_id):
 			else:
 				bot.sendMessage(chat_id, 'C\'Ã¨ giÃ  un sondaggio in corso')
 
+#Show ongoing poll, if there is one
 def ongoing(chat_id, from_id, chat_type):
 	try:
 		bot.sendMessage(chat_id, poll_of_the_day, reply_markup=markup)
 	except telepot.exception.TelegramError:
 		bot.sendMessage(chat_id, 'Nessun sondaggio impostato')
 
-#Close poll and generate the result
+#Close poll and generate the result: only the Master can put an end to polls
 def exitpoll(msg, chat_id, from_id):
-	if (from_id != 66441008) and (from_id != 163329729):
+	if (from_id != Master):
 		bot.sendMessage(chat_id, 'Solo il Gran Maestro puÃ² chiudere un sondaggio in corso')
-		if from_id == 146874789:
-			risp = ['Bea piantala', 'Ti ho detto che solo il Gran Maestro puÃ² ordinarlo', 'Non sei un Gran Maestro.', 'Che scassamaroni', 'testarda eh', 'Solo il Gran Maestro!', 'Non ti obbedirÃ² mai']
-			bot.sendMessage(chat_id, random.choice(risp))
 	else:
 		global poll_of_the_day
 		global risultati
@@ -207,8 +213,7 @@ bot = telepot.Bot(TOKEN)
 bot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query})
 
 logging.info('Bot started.')
-bot.sendMessage('163329729', 'Up and running')
-bot.sendMessage('66441008', 'Up and running')
+bot.sendMessage(Master, 'Up and running')
 
 # Keep the program running.
 while 1:
