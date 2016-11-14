@@ -11,7 +11,7 @@ import argparse
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
 """
-My personal attempt at a Python 3.5 polls bot, capable of holding multiple polls (one per group) at a time
+My personal attempt at a Python 3.5 polls bot, capable of holding multiple polls (one per group) at a time, hopefully
 """
 
 message_with_inline_keyboard = None
