@@ -1,6 +1,10 @@
 import sys
+import json
 import telepot
 from telepot.delegate import pave_event_space, per_chat_id, create_open
+
+with open('groups.json', 'r') as f:
+	groups = json.load(f)
 
 #Record everyone that writes to your bot
 def chatter(msg):
@@ -25,12 +29,18 @@ def chatter(msg):
         myfile.write(person + '\n')
 
 class MessageCounter(telepot.helper.ChatHandler):
+    global groups
     def __init__(self, *args, **kwargs):
         super(MessageCounter, self).__init__(*args, **kwargs)
-        chatter(msg)
         self._count = 0
 
     def on_chat_message(self, msg):
+        chatter(msg)
+        content_type, chat_type, chat_id = telepot.glance(msg)
+        if content_type == 'group_chat_created' or 'supergroup_chat_created':
+            groups[msg['chat']['title']] = chat_id
+            with open('groups.json', 'w') as json_file:
+                json.dump(groups, json_file, sort_keys=True, indent=4, separators=(',', ': '))
         self._count += 1
         self.sender.sendMessage(self._count)
 
