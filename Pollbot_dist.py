@@ -4,6 +4,7 @@ import telepot
 from telepot.delegate import pave_event_space, per_chat_id, create_open, include_callback_query_chat_id
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
+totalitario = {}
 sondaggi = {}
 with open('groups.json', 'r') as f:
 	groups = json.load(f)
@@ -34,48 +35,110 @@ class MessageCounter(telepot.helper.ChatHandler):
     global groups
     def __init__(self, *args, **kwargs):
         super(MessageCounter, self).__init__(*args, **kwargs)
-        self._count = 0
         self._poll_of_the_day = None
         self._markup = None
+        self._message_with_inline_keyboard = None
+        self._risultati = {}
+        self._votanti = {}
+        self._msg_idf = None
 
     def poll(self, msg, chat_id, chat_type, from_id):
 
         if chat_type == 'group' or chat_type == 'supergroup':
+            global sondaggi
             try:
-                message_with_inline_keyboard = self.sender.sendMessage(poll_of_the_day, reply_markup=markup) if (from_id == int(Master)) else self.sender.sendMessage('Only the Great Master of the Council can hold a poll')
+                if (str(chat_id), from_id) in sondaggi.keys():
+                    self._poll_of_the_day = sondaggi[(str(chat_id), from_id)][0]
+                    self._message_with_inline_keyboard = self.sender.sendMessage(self._poll_of_the_day, reply_markup=sondaggi[(str(chat_id), from_id)][1])
+                    self._risultati = totalitario[str(chat_id)]
+                else:
+                    self.sender.sendMessage('Only the Great Master of the Council can hold a poll')
             except telepot.exception.TelegramError:
                 self.sender.sendMessage('No poll set')
         elif chat_type == 'private':
             lista = msg['text'].split('&@')
             self._poll_of_the_day = lista[0][6:]
             del lista[0]
-            risultati = {}	
+            self._risultati = {}	
 
             buttons = []
             for e in lista:
-                risultati[e] = 0
-                buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(risultati[e]) + ')', callback_data=e)])
+                self._risultati[e] = 0
+                buttons.append([InlineKeyboardButton(text=e + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
             self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
             bot.sendMessage(chat_id, 'Poll set')
 
     def dest(self, msg, chat_type, from_id):
         buttons = []
         for e in groups.keys():
-            buttons.append([InlineKeyboardButton(text=e, callback_data=str(groups[e]))])
+            buttons.append([InlineKeyboardButton(text=e, callback_data=str(groups[e][0]))])
         contacts = InlineKeyboardMarkup(inline_keyboard=buttons)
         self.sender.sendMessage('Whom have you created this poll for?', reply_markup=contacts)
 
+    def scrutatore(self, msg, data, from_id, query_id):
+        try:
+            if from_id not in self._votanti.keys():
+                self._risultati[data] += 1
+                self._votanti[from_id] = data
+                bot.answerCallbackQuery(query_id, text=data + ': ' + str(self._risultati[data]))
+                buttons = []
+                for e in self._risultati.keys():
+                    buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
+                self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                self._msg_idf = telepot.message_identifier(self._message_with_inline_keyboard)
+                print(self._poll_of_the_day)
+#                bot.editMessageText(self._msg_idf, self._poll_of_the_day, reply_markup=self._markup)
+            else:
+                if self._votanti[from_id] == data:
+                    bot.answerCallbackQuery(query_id, text=msg['from']['username'] + ' has already cast his vote')
+                else:
+                    self._risultati[data] += 1
+                    self._risultati[self._votanti[from_id]] -= 1
+                    self._votanti[from_id] = data
+                    bot.answerCallbackQuery(query_id, text=data + ': ' + str(self._risultati[data]))
+                    buttons = []
+                    for e in self._risultati.keys():
+                        buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
+                    self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                    self._msg_idf = telepot.message_identifier(self._message_with_inline_keyboard)
+                    bot.editMessageText(self._msg_idf, self._poll_of_the_day, reply_markup=self._markup)
+        except ValueError:
+            bot.answerCallbackQuery(query_id, text='Poll closed')
+
     def on_callback_query(self, msg):
-        print(msg)
         global sondaggi
+        global totalitario
+
         query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
-        sondaggi[data, from_id] = [self._poll_of_the_day, self._markup]
-        self.bot.answerCallbackQuery(query_id, text='All set')
-        self.sender.sendMessage('All set')
+        print(data)
+        try:
+            if int(data) < 0:
+                totalitario[str(data)] = self._risultati
+                sondaggi[data, from_id] = [self._poll_of_the_day, self._markup]
+                self.bot.answerCallbackQuery(query_id, text='All set')
+                self.sender.sendMessage('All set')
+            else:
+                self.scrutatore(msg, data, from_id, query_id)
+        except ValueError:
+            self.scrutatore(msg, data, from_id, query_id)
+
+    def exitpoll(self, chat_id, from_id):
+        try:
+            exit_poll = self._poll_of_the_day + '\n'
+            for e in self._risultati.keys():
+                exit_poll += e + ': ' + str(self._risultati[e]) + '\n'
+            self.sender.sendMessage(exit_poll)
+            self._poll_of_the_day = None
+            self._risultati = {}
+            self._markup = None
+            self._votanti = {}
+            self._message_with_inline_keyboard = None
+        except TypeError:
+            self.sender.sendMessage(chat_id, 'No ongoing poll')
 
     def on_chat_message(self, msg):
         chatter(msg)
-        print(msg)
+#        print(msg)
         content_type, chat_type, chat_id = telepot.glance(msg)
         from_id = msg['from']['id']
         if content_type == 'group_chat_created' or content_type == 'supergroup_chat_created':
@@ -87,6 +150,8 @@ class MessageCounter(telepot.helper.ChatHandler):
             self.poll(msg, chat_id, chat_type, from_id)
         elif text == '/dest':
             self.dest(msg, chat_type, from_id)
+        elif text == '/exitpoll':
+            self.exitpoll(chat_id, from_id)
 
 TOKEN = sys.argv[1]  # get token from command-line
 
