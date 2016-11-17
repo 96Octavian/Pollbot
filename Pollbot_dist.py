@@ -124,7 +124,7 @@ class MessageCounter(telepot.helper.ChatHandler):
             for e in element:
                 buttons.append([InlineKeyboardButton(text=e, callback_data=str(groups[e][0]))])
             contacts = InlineKeyboardMarkup(inline_keyboard=buttons)
-            self.sender.sendMessage('Who have you created this poll for?', reply_markup=contacts)
+            self.sender.sendMessage('Who have you created this poll for?', reply_markup=contacts) if len(element) != 0 else self.sender.sendMessage('You have to add me to a group first')
         else:
             self.sender.sendMessage('Polls destination have to be voted in the Great High Council')
 
@@ -166,7 +166,6 @@ class MessageCounter(telepot.helper.ChatHandler):
             
                 
     def scrutatore(self, msg, data, from_id, query_id):
-        print(msg)
         try:
             if from_id not in self._votanti.keys():
                 logging.info('One vote from group')
@@ -204,7 +203,6 @@ class MessageCounter(telepot.helper.ChatHandler):
         global totalitario
 
         query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
-        print(data)
         try:
             if int(data) < 0:
                 totalitario[str(data)] = self._risultati
