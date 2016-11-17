@@ -171,12 +171,12 @@ class MessageCounter(telepot.helper.ChatHandler):
             groups[msg['chat']['title']] = [chat_id, from_id]
             with open('groups.json', 'w') as json_file:
                 json.dump(groups, json_file, sort_keys=True, indent=4, separators=(',', ': '))
-            print('Added to %n', msg['chat']['title'])
+            print('Added to ', msg['chat']['title'])
         elif content_type == 'left_chat_member' and msg['left_chat_participant']['id'] == 287100649:
             del groups[msg['chat']['title']]
             with open('groups.json', 'w') as json_file:
                 json.dump(groups, json_file, sort_keys=True, indent=4, separators=(',', ': '))
-            print('Removed from %n', msg['chat']['title'])
+            print('Removed from ', msg['chat']['title'])
         else:
             text = msg['text'].replace(bot_name, '')
             if text[:5] == '/poll':
