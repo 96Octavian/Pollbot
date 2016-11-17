@@ -43,6 +43,15 @@ class MessageCounter(telepot.helper.ChatHandler):
         self._msg_idf = None
         self._owner = None
 
+    def ongoing():
+        if chat_type == 'group' or chat_type == 'supergroup':
+            try:
+                self._message_with_inline_keyboard = self.sender.sendMessage(self._poll_of_the_day, reply_markup=sondaggi[(str(chat_id), from_id)][1])
+            except telepot.exception.TelegramError:
+                self.sender.sendMessage('No poll set')
+        else:
+            self.sender.sendMessage('There cannot be polls outside groups')
+
     def poll(self, msg, chat_id, chat_type, from_id):
 
         if chat_type == 'group' or chat_type == 'supergroup':
@@ -59,8 +68,10 @@ class MessageCounter(telepot.helper.ChatHandler):
             except telepot.exception.TelegramError:
                 self.sender.sendMessage('No poll set')
         elif chat_type == 'private':
-            lista = msg['text'].split('&@')
-            if len(lista) > 2:
+            lista = msg['text'].split(' . ')
+            if len(lista) == 1:
+                self.sender.sendMessage('No choices specified: poll not set')
+            elif len(lista) > 1:
                 self._poll_of_the_day = lista[0][6:]
                 del lista[0]
                 self._risultati = {}	
@@ -70,9 +81,8 @@ class MessageCounter(telepot.helper.ChatHandler):
                     self._risultati[e] = 0
                     buttons.append([InlineKeyboardButton(text=e + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
                 self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
-                self.sender.sendMessage('Poll set, only one choice possible') if len(lista) == 2 else self.sender.sendMessage('Poll set')
-            else:
-                self.sender.sendMessage('No choices specified: poll not set')
+                self.sender.sendMessage('Poll set, only one choice possible') if len(lista) == 1 else self.sender.sendMessage('Poll set')
+            
 
     def dest(self, msg, chat_type, from_id):
         if chat_type == 'private':
@@ -151,21 +161,30 @@ class MessageCounter(telepot.helper.ChatHandler):
             self.sender.sendMessage('You need to be in a group to stop a poll')
 
     def on_chat_message(self, msg):
+        global groups
         chatter(msg)
-#        print(msg)
+        print(msg)
         content_type, chat_type, chat_id = telepot.glance(msg)
         from_id = msg['from']['id']
-        if content_type == 'group_chat_created' or content_type == 'supergroup_chat_created':
+        print(content_type)
+        if content_type == 'new_chat_member':
             groups[msg['chat']['title']] = [chat_id, from_id]
             with open('groups.json', 'w') as json_file:
                 json.dump(groups, json_file, sort_keys=True, indent=4, separators=(',', ': '))
-        text = msg['text'].replace(bot_name, '')
-        if text[:5] == '/poll':
-            self.poll(msg, chat_id, chat_type, from_id)
-        elif text == '/dest':
-            self.dest(msg, chat_type, from_id)
-        elif text == '/exitpoll':
-            self.exitpoll(chat_id, from_id, chat_type)
+            print('Added to %n', msg['chat']['title'])
+        elif content_type == 'left_chat_member' and msg['left_chat_participant']['id'] == 287100649:
+            del groups[msg['chat']['title']]
+            with open('groups.json', 'w') as json_file:
+                json.dump(groups, json_file, sort_keys=True, indent=4, separators=(',', ': '))
+            print('Removed from %n', msg['chat']['title'])
+        else:
+            text = msg['text'].replace(bot_name, '')
+            if text[:5] == '/poll':
+                self.poll(msg, chat_id, chat_type, from_id)
+            elif text == '/dest':
+                self.dest(msg, chat_type, from_id)
+            elif text == '/exitpoll':
+                self.exitpoll(chat_id, from_id, chat_type)
 
 TOKEN = sys.argv[1]  # get token from command-line
 
