@@ -6,6 +6,12 @@ import argparse
 from telepot.delegate import pave_event_space, per_chat_id, create_open, include_callback_query_chat_id
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
+"""
+Python 3.5.2
+A Python bot for casting polls: the users who adds the bot to a group acts as the administrator and
+is the only one capable of starting and stopping polls
+"""
+
 totalitario = {}
 sondaggi = {}
 with open('groups.json', 'r') as f:
@@ -72,6 +78,7 @@ def chatter(msg):
     with open("./contatti.txt", "a") as myfile:
         myfile.write(person + '\n')
 
+#Per-chat class handler: every chat has its own variable space and keeps track of its poll
 class MessageCounter(telepot.helper.ChatHandler):
     global groups
     def __init__(self, *args, **kwargs):
