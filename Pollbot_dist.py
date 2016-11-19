@@ -177,7 +177,6 @@ class MessageCounter(telepot.helper.ChatHandler):
     def scrutatore(self, msg, data, from_id, query_id):
         try:
             if from_id not in self._votanti.keys():
-                logging.info('One vote from group')
                 self._risultati[data] += 1
                 self._votanti[from_id] = data
                 bot.answerCallbackQuery(query_id, text=data + ': ' + str(self._risultati[data]))
@@ -186,13 +185,13 @@ class MessageCounter(telepot.helper.ChatHandler):
                     buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
                 self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
                 self._msg_idf = telepot.message_identifier(self._message_with_inline_keyboard)
+                logging.info('One vote from group')
 #                print(self._poll_of_the_day)
                 bot.editMessageText(self._msg_idf, self._poll_of_the_day, reply_markup=self._markup)
             else:
                 if self._votanti[from_id] == data:
                     bot.answerCallbackQuery(query_id, text=msg['from']['username'] + ' has already cast his vote')
                 else:
-                    logging.info('One vote from group')
                     self._risultati[data] += 1
                     self._risultati[self._votanti[from_id]] -= 1
                     self._votanti[from_id] = data
@@ -202,6 +201,7 @@ class MessageCounter(telepot.helper.ChatHandler):
                         buttons.append([InlineKeyboardButton(text=str(e) + ' (' + str(self._risultati[e]) + ')', callback_data=e)])
                     self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
                     self._msg_idf = telepot.message_identifier(self._message_with_inline_keyboard)
+                    logging.info('One vote from group')
                     bot.editMessageText(self._msg_idf, self._poll_of_the_day, reply_markup=self._markup)
         except (ValueError, KeyError):
             bot.answerCallbackQuery(query_id, text='Poll closed')
@@ -225,9 +225,9 @@ class MessageCounter(telepot.helper.ChatHandler):
             self.scrutatore(msg, data, from_id, query_id)
 
 
-    def help(self, content_type):
-        if content_type == 'private':
-            self.sender.sendMessage('This bot can hold polls in groups you\'re in.\nSend me the poll using the command /poll with this syntax: \n<code>/poll Question . Choice 1 - Choice 2 - etc</code>\nNB: To separate question and choices you must type \' . \' , i.e. \'*space dot space*\'\nNext use \'/dest\' to choose from a list of groups you\'ve added this bot to.\nWhile you are in a group, you can send /poll to start a poll, /ongoing to show the current poll, or /exitpoll to terminate it')
+    def help(self, chat_type):
+        if chat_type == 'private':
+            self.sender.sendMessage('This bot can hold polls in groups you\'re in.\nSend me the poll using the command /poll with this syntax: \n<code>/poll Question . Choice 1 - Choice 2 - etc</code>\nNB: To separate question and choices you must type \' . \' , i.e. \'*space dot space*\'\nNext use \'/dest\' to choose from a list of groups you\'ve added this bot to.\nWhile you are in a group, you can send /poll to start a poll, /ongoing to show the current poll, or /exitpoll to terminate it', parse_mode='HTML')
         else:
             self.sender.sendMessage('You have to be in a private chat to ask for help')
 
