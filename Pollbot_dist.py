@@ -259,7 +259,7 @@ class MessageCounter(telepot.helper.ChatHandler):
             elif text == '/exitpoll':
                 self.exitpoll(msg, chat_id, from_id, chat_type)
             elif text == '/help' or text == '/start':
-                self.help(content_type)
+                self.help(chat_type)
 
 
 #TOKEN = sys.argv[1]  # get token from command-line
