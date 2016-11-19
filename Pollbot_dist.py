@@ -258,7 +258,7 @@ class MessageCounter(telepot.helper.ChatHandler):
                 self.dest(msg, chat_type, from_id)
             elif text == '/exitpoll':
                 self.exitpoll(msg, chat_id, from_id, chat_type)
-            elif text == '/help':
+            elif text == '/help' or text == '/start':
                 self.help(content_type)
 
 
