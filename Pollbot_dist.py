@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import json
 import telepot
@@ -215,6 +217,13 @@ class MessageCounter(telepot.helper.ChatHandler):
         except ValueError:
             self.scrutatore(msg, data, from_id, query_id)
 
+
+    def help(self, content_type):
+        if content_type == 'private':
+            self.sender.sendMessage('This bot can hold polls in groups you\'re in.\nSend me the poll using the command /poll with this syntax: \n<code>/poll Question . Choice 1 - Choice 2 - etc</code>\nNB: To separate question and choices you must type \' . \' , i.e. \'*space dot space*\'\nNext use \'/dest\' to choose from a list of groups you\'ve added this bot to.\nWhile you are in a group, you can send /poll to start a poll, /ongoing to show the current poll, or /exitpoll to terminate it')
+        else:
+            self.sender.sendMessage('You have to be in a private chat to ask for help')
+
             
     def on_chat_message(self, msg):
         global groups
@@ -242,6 +251,8 @@ class MessageCounter(telepot.helper.ChatHandler):
                 self.dest(msg, chat_type, from_id)
             elif text == '/exitpoll':
                 self.exitpoll(msg, chat_id, from_id, chat_type)
+            elif text == '/help':
+                self.help(content_type)
 
 
 #TOKEN = sys.argv[1]  # get token from command-line
