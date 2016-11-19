@@ -203,7 +203,7 @@ class MessageCounter(telepot.helper.ChatHandler):
                     self._markup = InlineKeyboardMarkup(inline_keyboard=buttons)
                     self._msg_idf = telepot.message_identifier(self._message_with_inline_keyboard)
                     bot.editMessageText(self._msg_idf, self._poll_of_the_day, reply_markup=self._markup)
-        except ValueError:
+        except (ValueError, KeyError):
             bot.answerCallbackQuery(query_id, text='Poll closed')
 
 
