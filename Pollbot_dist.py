@@ -227,7 +227,7 @@ class MessageCounter(telepot.helper.ChatHandler):
 
     def help(self, chat_type):
         if chat_type == 'private':
-            self.sender.sendMessage('This bot can hold polls in groups you\'re in.\nSend me the poll using the command /poll with this syntax: \n<code>/poll Question . Choice 1 - Choice 2 - etc</code>\nNB: To separate question and choices you must type \' . \' , i.e. \'*space dot space*\'\nNext use \'/dest\' to choose from a list of groups you\'ve added this bot to.\nWhile you are in a group, you can send /poll to start a poll, /ongoing to show the current poll, or /exitpoll to terminate it', parse_mode='HTML')
+            self.sender.sendMessage('This bot can hold polls in groups you\'re in.\nSend the poll in private chat using the command /poll with this syntax: \n<code>/poll Question . Choice 1 . Choice 2 . etc</code>\nNB: To separate question and choices you must type \' . \' , i.e. \'*space dot space*\'\nNext use \'/dest\' to choose from a list of groups you\'ve added this bot to.\nWhile you are in a group, you can send /poll to start a poll, /ongoing to show the current poll, or /exitpoll to terminate it.', parse_mode='HTML')
         else:
             self.sender.sendMessage('You have to be in a private chat to ask for help')
 
